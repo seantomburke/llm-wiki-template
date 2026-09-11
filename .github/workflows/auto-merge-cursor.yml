@@ -1,0 +1,90 @@
+name: Auto-merge Cursor PRs
+
+# Optional for docs-only wikis: merge bot / Cursor agent PRs into the default branch
+# without waiting on human review. Delete this workflow if your repo needs review gates.
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+    inputs:
+      stale_hours:
+        description: Hours of inactivity before a bot draft is merged
+        required: false
+        default: '24'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'pull_request_target' &&
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.base.ref == github.event.repository.default_branch &&
+      (
+        github.event.pull_request.user.type == 'Bot' ||
+        github.event.pull_request.user.login == 'cursoragent'
+      )
+    steps:
+      - name: Squash merge the pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge "$PR_URL" --squash --delete-branch
+
+  promote-stale-drafts:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Mark stale bot drafts ready for review and merge them
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          STALE_HOURS: ${{ github.event.inputs.stale_hours || '24' }}
+        run: |
+          set -euo pipefail
+
+          cutoff=$(date -u -d "-${STALE_HOURS} hours" +%Y-%m-%dT%H:%M:%SZ)
+          echo "Merging bot drafts against $DEFAULT_BRANCH with no activity since $cutoff"
+
+          mapfile -t prs < <(
+            gh pr list \
+              --state open \
+              --draft \
+              --base "$DEFAULT_BRANCH" \
+              --limit 100 \
+              --json number,updatedAt,author \
+              --jq ".[]
+                    | select(.author.is_bot == true or .author.login == \"cursoragent\")
+                    | select(.updatedAt < \"$cutoff\")
+                    | .number"
+          )
+
+          if [ "${#prs[@]}" -eq 0 ]; then
+            echo "No stale bot drafts to promote."
+            exit 0
+          fi
+
+          failed=0
+          for pr in "${prs[@]}"; do
+            echo "::group::PR #$pr"
+            if gh pr ready "$pr" && gh pr merge "$pr" --squash --delete-branch; then
+              echo "Merged #$pr"
+            else
+              echo "::warning::Could not merge #$pr (conflict, failing check, or protected branch)"
+              failed=1
+            fi
+            echo "::endgroup::"
+          done
+
+          exit $failed

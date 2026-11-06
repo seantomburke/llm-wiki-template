@@ -62,7 +62,7 @@ CLAUDE.md               -- pointer: always read nearest AGENTS.md
 .agents/skills/         -- agent skills (ingest, lint, publish)
 .github/workflows/
 ├── sync-wiki.yml       -- publish docs/wiki/ → GitHub Wiki
-└── auto-merge-cursor.yml -- optional: auto-merge bot PRs (docs-only repos)
+└── auto-merge-bot-prs.yml -- optional: auto-merge bot PRs (docs-only repos)
 docs/
 ├── AGENTS.md           -- full wiki schema and conventions
 ├── raw/                -- source documents and tool output

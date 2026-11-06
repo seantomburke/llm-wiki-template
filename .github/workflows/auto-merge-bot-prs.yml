@@ -1,6 +1,6 @@
-name: Auto-merge Cursor PRs
+name: Auto-merge bot PRs
 
-# Optional for docs-only wikis: merge bot / Cursor agent PRs into the default branch
+# Optional for docs-only wikis: merge eligible bot and agent PRs into the default branch
 # without waiting on human review. Delete this workflow if your repo needs review gates.
 
 on:

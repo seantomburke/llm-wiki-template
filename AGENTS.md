@@ -16,6 +16,12 @@ Replace the placeholders below, then delete any sections that do not apply.
 - **Layer 2 — Wiki** (`docs/wiki/`): LLM-maintained markdown pages — topics, concepts, index, and log.
 - **Layer 3 — Schema** (`docs/AGENTS.md`): page format, ingest workflow, lint rules, and conventions.
 
+## Agent instructions
+
+`AGENTS.md` is the only agent-instructions file in this repo. Every agent (Claude Code, Cursor,
+Codex, …) reads it directly, so never add a `CLAUDE.md`. Start with this root file, then read any
+`AGENTS.md` in the subdirectories you are about to work in; the one nearest a file takes precedence.
+
 ## Agent identity
 
 Edit [`SOUL.md`](SOUL.md) to name and characterize the agent that lives in this repo.
@@ -57,7 +63,6 @@ domain requires it — if you must show UTC, also show the local equivalent.
 ```
 AGENTS.md               -- this file: agent entry point, quick reference
 SOUL.md                 -- optional agent persona / voice
-CLAUDE.md               -- pointer: always read nearest AGENTS.md
 .env.template           -- optional secrets format (committed, no real values)
 .agents/skills/         -- agent skills (ingest, lint, publish)
 .github/workflows/

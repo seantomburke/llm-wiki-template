@@ -20,7 +20,7 @@ flowchart TD
     Raw["docs/raw/<br/>evidence"] --> Ingest["Ingest"]
     Ingest --> Pages["topics / concepts / …"]
     Pages --> Index["index.md"]
-    Ingest --> Log["log.md + archive/"]
+    Ingest --> Log["log/ entries"]
     Pages --> Sync["GitHub Wiki publish"]
 ```
 

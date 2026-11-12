@@ -19,7 +19,7 @@ Follow the **Lint** section in [`docs/AGENTS.md`](../../../docs/AGENTS.md).
 5. Claims that look stale vs newer raw captures or newer log entries.
 6. Page format compliance (Summary, Sources, Last updated, Related pages).
 7. Basename uniqueness under `docs/wiki/` (required for GitHub Wiki sync).
-8. Log rotation sanity (Recent ≤ 7 days of full prose; archive day files exist for Recent entries).
+8. Operation log entries use unique timestamped filenames and contain one operation with a labeled local timestamp.
 
 ## Report format
 

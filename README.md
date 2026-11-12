@@ -10,7 +10,7 @@ a personal second brain — not just infrastructure.
 ## Features
 
 - Three-layer layout: **raw sources → wiki pages → schema**
-- Bounded operation log with day archives (7-day / 90-day rotation)
+- One timestamped log file per operation to reduce merge conflicts
 - GitHub Action that publishes `docs/wiki/` to the **GitHub Wiki**
 - Agent skills for **ingest**, **lint**, and **publish**
 - Optional auto-merge workflow for bot PRs on docs-only repos
@@ -29,7 +29,7 @@ a personal second brain — not just infrastructure.
 | Layer | Path | Description |
 |-------|------|-------------|
 | Raw sources | `docs/raw/` | Evidence: `current/` living snapshots + dated immutable captures |
-| Wiki | `docs/wiki/` | Agent-maintained pages, index, and rolling log |
+| Wiki | `docs/wiki/` | Agent-maintained pages, index, and operation log |
 | Schema | `docs/AGENTS.md` | Page format, ingest, lint, citation, and sync rules |
 
 ## Quick reference

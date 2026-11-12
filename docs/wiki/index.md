@@ -22,8 +22,7 @@
 
 | Page | Description |
 |------|-------------|
-| [log.md](log.md) | Rolling operation log (7 days full, 90 days indexed) |
-| [archive/log-archive.md](archive/log-archive.md) | Index of archived operation days |
+| [log/](log/) | Timestamped operation entries; list filenames newest first |
 
 ## Raw inventory
 

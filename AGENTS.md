@@ -76,8 +76,7 @@ docs/
 │   └── YYYY/MM/DD/     -- immutable point-in-time captures + README.md manifest
 └── wiki/
     ├── index.md        -- table of contents for the entire wiki
-    ├── log.md          -- rolling operation log (7 days full, 90 days indexed)
-    ├── archive/        -- log-archive.md + YYYY/MM/YYYY-MM-DD.md full operation prose
+    ├── log/            -- one date-and-time-prefixed file per operation
     ├── topics/         -- one page per major subject area (customize freely)
     └── concepts/       -- cross-cutting ideas (customize freely)
 ```

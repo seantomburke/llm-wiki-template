@@ -20,9 +20,7 @@ docs/raw/YYYY/MM/DD/               -- immutable point-in-time captures, filed by
 docs/raw/YYYY/MM/DD/README.md      -- manifest of that day's captures
 docs/wiki/                         -- markdown pages maintained by the agent
 docs/wiki/index.md                 -- table of contents for the entire wiki
-docs/wiki/log.md                   -- rolling operation log (7 days full, 90 days indexed)
-docs/wiki/archive/log-archive.md   -- index of every archived operation day
-docs/wiki/archive/YYYY/MM/YYYY-MM-DD.md -- full prose for every operation on that date
+docs/wiki/log/                      -- one timestamped file per operation
 docs/wiki/topics/                  -- one page per major subject area
 docs/wiki/concepts/                -- cross-cutting concepts
 ```
@@ -83,7 +81,7 @@ needed). After writing or refreshing a `current/` file, add a row to `docs/raw/i
 ### Ingest requirement
 
 After saving the raw file, run the standard ingest workflow: update relevant `docs/wiki/` pages,
-`docs/wiki/index.md`, and record the operation in the log (see **Operation log rotation**).
+`docs/wiki/index.md`, and record the operation in the log (see **Operation log**).
 
 ### Raw file size (~1 MB guideline)
 
@@ -113,60 +111,40 @@ When the user adds a new source to `docs/raw/` and asks you to ingest it:
 6. Update `docs/wiki/index.md` with new pages and one-line descriptions, and register any new raw
    capture in its day manifest or in `docs/raw/index.md` for a `current/` file.
    Raw files are **not** listed in `docs/wiki/index.md`
-7. Record the operation following the **Operation log rotation** rules below
+7. Record the operation following the **Operation log** rules below
 
 A single source may touch many wiki pages. That is normal.
 
-## Operation log rotation
+## Operation log
 
-`docs/wiki/log.md` is a **bounded rolling window**, not an append-only file. Full prose for every
-operation lives in the archive; the log carries the last 7 days verbatim and the last 90 days as one
-row each.
+Record each operation in a new file under `docs/wiki/log/`. Do not update a shared log or archive
+index: separate files let concurrent operations merge without editing the same log file.
 
-Three tiers, newest first:
+Name each file `YYYY-MM-DD-HHMMSS-<short-operation-slug>.md`, using the team's local time and a
+lowercase, hyphenated slug. For example, `2026-08-23-091015-ingest-inventory.md`. If that name
+already exists, add a unique suffix before `.md`; never overwrite an existing entry. Use a distinct
+slug or unique suffix for concurrent operations, including operations started in the same second.
+Basenames must remain unique across all of `docs/wiki/` for GitHub Wiki sync.
 
-| Tier | Window | Form |
-|------|--------|------|
-| `# Recent (last 7 days)` | last 7 days | full entries, verbatim |
-| `# Earlier operations (8–90 days)` | 8–90 days | one table row per operation |
-| `# Archive (before …)` | older than 90 days | one table row per month |
+Each file contains one operation. Start with a title, include the full timestamp with its time zone,
+and use bold field labels appropriate to the work (`**Operation**`, `**Pages updated**`,
+`**Raw sources captured**`, `**Key findings**`, …). Keep entries as the permanent record; there is
+no rotation or shared archive index.
 
-**Write the archive first.** The Recent tier is a 7-day *mirror* of prose that already exists in the
-archive, so rotation is purely subtractive and safe to re-run. When you record an operation:
-
-1. Append the entry to `docs/wiki/archive/YYYY/MM/YYYY-MM-DD.md`, newest first within the day. Create
-   the file if this is the day's first operation.
-2. If the day file is new, add its row to `docs/wiki/archive/log-archive.md`.
-3. Prepend the same prose to the Recent tier of `docs/wiki/log.md`.
-4. Recompute tier boundaries against today's date. Any Recent entry now older than 7 days: delete the
-   prose from `log.md` and add its row to the Earlier table.
-5. Any Earlier row now older than 90 days: delete the row and increment that month's count in the
-   Archive table, extending Themes if the operation introduced a genuinely new theme.
-
-**Entry format.** `## YYYY-MM-DD — Title`, then bolded field labels, then a `---` separator. Field
-labels are deliberately *not* normalised — use whatever fits (`**Operation**`, `**Pages updated**`,
-`**Raw sources captured**`, `**Key findings**`, …). Two operations on the same date need
-distinguishable titles.
-
-**Archive filenames must be globally unique across `docs/wiki/`.** Always use the full
-`YYYY-MM-DD.md` form. The archive index is `log-archive.md` rather than `index.md` so it does not
-collide with `Home.md` after wiki sync.
-
-**Scheduled / mechanical refreshes are exempt** from logging when they overwrite `docs/raw/current/`
-with no synthesis. Only operations involving judgement get logged.
+Scheduled or mechanical refreshes that overwrite `docs/raw/current/` without synthesis do not need
+an entry. Log operations involving judgement.
 
 ## Reading the wiki economically
 
 Read in this order and stop as soon as you have what you need:
 
 1. **`docs/wiki/index.md`** — always first. The map: page tables plus pointers to the log and raw inventory.
-2. **`docs/wiki/log.md`** — when you need recency (what changed lately, when something was last touched).
+2. **`docs/wiki/log/`** — when you need recency, list filenames newest first and open relevant entries.
 3. **The specific wiki pages** the index pointed you at.
-4. **`docs/wiki/archive/YYYY/MM/YYYY-MM-DD.md`** — only once you know the exact date. Open one day, not a range.
-5. **`docs/raw/…`** — only to verify a specific claim. Find files via day `README.md` or `docs/raw/index.md`;
+4. **`docs/raw/…`** — only to verify a specific claim. Find files via day `README.md` or `docs/raw/index.md`;
    never enumerate `docs/raw/` wholesale.
 
-Never read `log.md`, the archive, or `docs/raw/` "to get oriented". The index exists for that.
+Never read the log or `docs/raw/` "to get oriented". The index exists for that.
 
 ## Page format
 
@@ -214,7 +192,7 @@ flowchart TD
     Sources["docs/raw/"] --> Ingest["Ingest workflow"]
     Ingest --> Wiki["docs/wiki/"]
     Wiki --> Index["index.md"]
-    Wiki --> Log["log.md + archive/"]
+    Wiki --> Log["log/ entries"]
     Wiki --> Publish["GitHub Wiki sync"]
 ```
 
@@ -236,8 +214,8 @@ When the user asks a question:
 4. If the answer is not in the wiki, say so clearly
 5. If the answer is valuable, offer to save it as a new wiki page
 
-For **"when did X last change / when did we last look at X"**, go to `docs/wiki/log.md`: scan Recent,
-then Earlier. Only if needed, use `docs/wiki/archive/log-archive.md` to open a single day file.
+For **"when did X last change / when did we last look at X"**, list `docs/wiki/log/` filenames
+newest first, then search or open the relevant entries.
 
 For **"show me the evidence / what did the raw data say on \<date\>"**, go to
 `docs/raw/YYYY/MM/DD/README.md` for that date and open the one capture you need.
@@ -269,7 +247,7 @@ Behavior:
 
 **Basename uniqueness.** GitHub Wiki flattens the tree. Do not create two files that share a basename
 (e.g. `topics/overview.md` and `concepts/overview.md`). Prefer distinctive names
-(`topic-overview.md`, `concept-overview.md`). Archive days use `YYYY-MM-DD.md` for the same reason.
+(`topic-overview.md`, `concept-overview.md`). Log entries use timestamped, descriptive basenames for the same reason.
 Wiki-links should use the bare page name: `[[page-name]]`, not `[[concepts/page-name]]`.
 
 **First-time setup.** GitHub does not create the wiki git repo until at least one wiki page exists.
@@ -289,7 +267,7 @@ Express timestamps in the team's local zone with an explicit label. Default for 
 - Whenever a live query returns durable domain facts, save the raw output to `docs/raw/` using the
   naming convention above, then ingest before using the data.
 - Keep raw snapshots lean — follow the **Raw file size (~1 MB guideline)**.
-- Always update `docs/wiki/index.md` after changes, and record the operation per **Operation log rotation**.
+- Always update `docs/wiki/index.md` after changes, and record the operation per **Operation log**.
 - Keep page names lowercase with hyphens (e.g. `machine-learning.md`).
 - Write in clear, plain language.
 - When uncertain how to categorize something, ask the user.
